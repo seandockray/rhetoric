@@ -224,6 +224,7 @@ def phrase_headings(phrase):
     if from_date and to_date:
         data_url = url_for('api_phrase_headings', phrase=phrase, from_date=from_date, to_date=to_date)
         title += " between %s and %s" % (from_date, to_date)
+        linked_title += " between %s and %s" % (from_date, to_date)
     else:
         data_url = url_for('api_phrase_headings', phrase=phrase)
     t = Template(filename='templates/rhetoric/bubble-chart.html')
