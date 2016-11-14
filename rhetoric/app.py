@@ -67,7 +67,8 @@ def get_heading_phrase_counts(headingtitle, how_many=25):
     if headingtitle[-1]==')' and headingtitle[-4]=='-' and headingtitle[-12]=='(':
         date = headingtitle[-12:]
         headingtitle = headingtitle[:-12].strip()  
-    query = {"headingtitle": { "$regex": "^"+headingtitle+".*" }}
+    #query = {"headingtitle": { "$regex": "^"+headingtitle+".*" }}
+    query = {"headingtitle": headingtitle}
     map = Code("function () {"
                 "   emit(this.phrase,1);"
                 "}")
