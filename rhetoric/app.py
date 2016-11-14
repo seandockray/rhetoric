@@ -91,15 +91,9 @@ def get_phrase_heading_counts(phrase, speakername=None, how_many=25, from_date=N
     reduce = Code("function (key, values) {"
                 "   return Array.sum(values)"
                 "}")
-    import traceback
-    try:
-        results = db.phrases.map_reduce(map, reduce, "results", query=query)
-        for doc in results.find().sort("value", -1).limit(how_many):
-            yield doc
-    except:
-        x = traceback.print_exc()
-        yield {'_id':'x','value':x}
-    yield {'_id':'x','value':'done'}
+    results = db.phrases.map_reduce(map, reduce, "results", query=query)
+    for doc in results.find().sort("value", -1).limit(how_many):
+        yield doc
 
 
 def get_phrase_usage(phrase, speakername=None):
@@ -299,6 +293,15 @@ def api_phrase_usage(phrase):
             "Usage": int(r["value"])
         })
     return jsonify(**ret)
+
+@app.route('/test')
+def testing():
+    import traceback
+    try:
+        return list(get_phrase_heading_counts('energy use'))
+    except:
+        return traceback.print_exc()
+
 
 if __name__=="__main__":
     app.debug = True
