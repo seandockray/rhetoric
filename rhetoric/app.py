@@ -296,7 +296,7 @@ if __name__=="__main__":
     client = MongoClient('127.0.0.1', app.config['MONGO_PORT'])
     db = client.hansard
     #app.debug = True
-    app.run(host='127.0.0.1', port=app.config['PORT'])
+    app.run(host='127.0.0.1', port=app.config['PORT'], debug=True)
 
     """
     print 'get_speaker_phrase_counts("Christine Anne Milne")'
