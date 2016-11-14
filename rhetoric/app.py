@@ -305,7 +305,7 @@ def testing():
         reduce = Code("function (key, values) {"
                     "   return Array.sum(values)"
                     "}")
-        results = db.phrases.map_reduce(map, reduce, "results", query=query)
+        #results = db.phrases.map_reduce(map, reduce, "results", query=query)
         return "success"
     except:
         return traceback.print_exc()
