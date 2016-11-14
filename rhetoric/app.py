@@ -98,8 +98,8 @@ def get_phrase_heading_counts(phrase, speakername=None, how_many=25, from_date=N
             yield doc
     except:
         x = traceback.print_exc()
-        return [{'_id':'x','value':x}]
-    return []
+        yield {'_id':'x','value':x}
+    return {'_id':'x','value':'done'}
 
 
 def get_phrase_usage(phrase, speakername=None):
