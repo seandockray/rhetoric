@@ -18,7 +18,8 @@ app = Flask(__name__)
 app.config.from_pyfile('../app.conf', silent=True)
 
 def get_speaker_phrase_counts(speakername, how_many=25, from_date=None, to_date=None):
-    ''' A list of phrases by number of occurrences '''  
+    ''' A list of phrases by number of occurrences ''' 
+    db = client.hansard 
     query = {"speakername": speakername}
     if from_date and to_date:
         query["date"] = {"$gte": from_date, "$lte": to_date}
@@ -36,6 +37,7 @@ def get_speaker_phrase_counts(speakername, how_many=25, from_date=None, to_date=
 
 def get_phrase_speaker_counts(phrase, how_many=25, from_date=None, to_date=None):
     ''' A list of speakers by number of occurrences for a phrase '''  
+    db = client.hansard
     query = {"phrase": phrase}
     if from_date and to_date:
         query["date"] = {"$gte": from_date, "$lte": to_date}
@@ -51,6 +53,7 @@ def get_phrase_speaker_counts(phrase, how_many=25, from_date=None, to_date=None)
 
 def get_phrase_speaker_heading_counts(phrase, speakername):
     ''' A list of speakers by number of occurrences for a phrase '''  
+    db = client.hansard
     query = {"phrase": phrase, "speakername": speakername}
     map = Code("function () {"
                 "   emit(this.headingtitle + ' ('+ this.date + ')',1);"
@@ -64,6 +67,7 @@ def get_phrase_speaker_heading_counts(phrase, speakername):
 
 def get_heading_phrase_counts(headingtitle, how_many=25):
     ''' A list of headings by number of occurrences for a phrase '''
+    db = client.hansard
     if headingtitle[-1]==')' and headingtitle[-4]=='-' and headingtitle[-12]=='(':
         date = headingtitle[-12:]
         headingtitle = headingtitle[:-12].strip()  
@@ -80,6 +84,7 @@ def get_heading_phrase_counts(headingtitle, how_many=25):
 
 def get_phrase_heading_counts(phrase, speakername=None, how_many=25, from_date=None, to_date=None):
     ''' A list of headings by number of occurrences for a phrase '''  
+    db = client.hansard
     query = {"phrase": phrase}
     if from_date and to_date:
         query["date"] = {"$gte": from_date, "$lte": to_date}
@@ -98,6 +103,7 @@ def get_phrase_heading_counts(phrase, speakername=None, how_many=25, from_date=N
 
 def get_phrase_usage(phrase, speakername=None):
     ''' A list of phrases by number of occurrences '''
+    db = client.hansard
     query = {"phrase": phrase}
     if speakername:
         query["speakername"] = speakername
@@ -114,6 +120,7 @@ def get_phrase_usage(phrase, speakername=None):
 
 def get_phrases_containing(fragment, how_many=25, from_date=None, to_date=None, speakername=None):
     ''' A list of phrases containing some text '''  
+    db = client.hansard
     match = {"$match": {"phrase":re.compile(".*"+fragment+".*", re.IGNORECASE)}}
     if speakername:
         match["$match"]["speakername"] = speakername
@@ -293,8 +300,7 @@ def api_phrase_usage(phrase):
     return jsonify(**ret)
 
 if __name__=="__main__":
-    client = MongoClient(app.config['MONGO_PORT'], app.config['MONGO_PORT'])
-    db = client.hansard
+    client = MongoClient(app.config['MONGO_HOST'], app.config['MONGO_PORT'], connect=False)
     #app.debug = True
     app.run(host='0.0.0.0', port=app.config['PORT'])
 
