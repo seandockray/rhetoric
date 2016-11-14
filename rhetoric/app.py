@@ -295,7 +295,7 @@ def api_phrase_usage(phrase):
 if __name__=="__main__":
     client = MongoClient('127.0.0.1', app.config['MONGO_PORT'])
     db = client.hansard
-    app.debug = True
+    #app.debug = True
     app.run(host='127.0.0.1', port=app.config['PORT'])
 
     """
