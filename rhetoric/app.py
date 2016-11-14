@@ -236,20 +236,25 @@ def phrase_headings(phrase):
 
 @app.route("/api/v1.0/phrase/<phrase>/headings")
 def api_phrase_headings(phrase):
-    from_date = request.args.get('from_date')
-    to_date = request.args.get('to_date')
-    if from_date and to_date:
-        results = get_phrase_heading_counts(phrase, how_many=50, from_date=from_date, to_date=to_date)
-    else:
-        results = get_phrase_heading_counts(phrase, how_many=50)
-    ret = {"items":[]}
-    for r in results:
-        ret["items"].append({
-            "label": str(r["_id"]), 
-            "num": int(r["value"]),
-            "url": url_for('heading_phrases', headingtitle=str(r["_id"]))
-            })
-    return jsonify(**ret)
+    import traceback
+    try:
+        from_date = request.args.get('from_date')
+        to_date = request.args.get('to_date')
+        if from_date and to_date:
+            results = get_phrase_heading_counts(phrase, how_many=50, from_date=from_date, to_date=to_date)
+        else:
+            results = get_phrase_heading_counts(phrase, how_many=50)
+        ret = {"items":[]}
+        for r in results:
+            ret["items"].append({
+                "label": str(r["_id"]), 
+                "num": int(r["value"]),
+                "url": url_for('heading_phrases', headingtitle=str(r["_id"]))
+                })
+        return jsonify(**ret)
+    except:
+        return traceback.print_exc()
+
 
 @app.route("/heading/<headingtitle>/phrases")
 def heading_phrases(headingtitle):
