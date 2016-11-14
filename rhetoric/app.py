@@ -136,14 +136,20 @@ def get_phrases_containing(fragment, how_many=25, from_date=None, to_date=None, 
 
 @app.route("/speaker/<speakername>")
 def speaker_phrases(speakername):
+    title = "what %s spoke about" % phrase
     from_date = request.args.get('from_date')
     to_date = request.args.get('to_date')
     if from_date and to_date:
         data_url = url_for('api_speaker_phrases', speakername=speakername, from_date=from_date, to_date=to_date)
+        title += " between %s and %s" % (from_date, to_date)
     else:
         data_url = url_for('api_speaker_phrases', speakername=speakername)
     t = Template(filename='templates/rhetoric/bar-chart.html')
-    return t.render(data_url=data_url)
+    return t.render(
+        data_url=data_url,
+        title=title,
+        linked_title=title
+    )
 
 @app.route("/api/v1.0/speaker/<speakername>")
 def api_speaker_phrases(speakername):
