@@ -286,22 +286,43 @@ def api_heading_phrases(headingtitle):
 
 @app.route("/phrase/<phrase>/usage")
 def phrase_usage(phrase):
-    title = "when and how often '%s' was said" % phrase
-    t = Template(filename='templates/rhetoric/line-chart.html')
-    return t.render(
-        data_url=url_for('api_phrase_usage', phrase=phrase),
-        title = title
-    )
+    if ',' in phrase:
+        phrases = phrase.split(',')
+        title = ' v. '.join(phrases)
+        t = Template(filename='templates/rhetoric/multi-line-chart.html')
+        return t.render(
+            data_url=url_for('api_phrase_usage', phrase=phrase),
+            title = title
+        )
+    else:
+        title = "when and how often '%s' was said" % phrase
+        t = Template(filename='templates/rhetoric/line-chart.html')
+        return t.render(
+            data_url=url_for('api_phrase_usage', phrase=phrase),
+            title = title
+        )
 
 @app.route("/api/v1.0/phrase/<phrase>/usage")
 def api_phrase_usage(phrase):
-    ret = {"filter_url": url_for('phrase_headings', phrase=phrase, from_date="FROM_DATE", to_date="TO_DATE"), "items":[]}
-    results = get_phrase_usage(phrase)
-    for r in results:
-        ret["items"].append({
-            "Date": str(r["_id"]), 
-            "Usage": int(r["value"])
-        })
+    if ',' in phrase:
+        phrases = phrase.split(',')
+        ret = {"items":[]}
+        for p in phrases:
+            results = get_phrase_usage(p)
+            for r in results:
+                ret["items"].append({
+                    "Phrase": p,
+                    "Month": str(r["_id"]), 
+                    "Usage": int(r["value"])
+                })
+    else:
+        ret = {"filter_url": url_for('phrase_headings', phrase=phrase, from_date="FROM_DATE", to_date="TO_DATE"), "items":[]}
+        results = get_phrase_usage(phrase)
+        for r in results:
+            ret["items"].append({
+                "Month": str(r["_id"]), 
+                "Usage": int(r["value"])
+            })
     return jsonify(**ret)
 
 
