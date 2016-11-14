@@ -136,7 +136,7 @@ def get_phrases_containing(fragment, how_many=25, from_date=None, to_date=None, 
 
 @app.route("/speaker/<speakername>")
 def speaker_phrases(speakername):
-    title = "what %s spoke about" % phrase
+    title = "what %s spoke about" % speakername
     from_date = request.args.get('from_date')
     to_date = request.args.get('to_date')
     if from_date and to_date:
