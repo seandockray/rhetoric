@@ -66,10 +66,10 @@ def get_heading_phrase_counts(headingtitle, how_many=25):
     ''' A list of headings by number of occurrences for a phrase '''
     date = None
     if headingtitle[-1]==')' and headingtitle[-4]=='-' and headingtitle[-12]=='(':
-        date = headingtitle[-12:]
+        date = headingtitle[-11:-1]
         headingtitle = headingtitle[:-12].strip()  
-    query = {"headingtitle": { "$regex": "^"+headingtitle+".*" }}
-    #query = {"headingtitle": headingtitle}
+    #query = {"headingtitle": { "$regex": "^"+headingtitle+".*" }}
+    query = {"headingtitle": headingtitle}
     if date:
         query["date"] = date.strip()
     map = Code("function () {"
