@@ -53,7 +53,7 @@ def get_phrase_speaker_heading_counts(phrase, speakername):
     ''' A list of speakers by number of occurrences for a phrase '''  
     query = {"phrase": phrase, "speakername": speakername}
     map = Code("function () {"
-                "   emit(this.headingtitle + ' ('+ this.date + ')',1);"
+                "   emit(this.headingtitle.substring(0,64) + ' ('+ this.date + ')',1);"
                 "}")
     reduce = Code("function (key, values) {"
                 "   return Array.sum(values)"
@@ -67,7 +67,7 @@ def get_heading_phrase_counts(headingtitle, how_many=25):
     if headingtitle[-1]==')' and headingtitle[-4]=='-' and headingtitle[-12]=='(':
         date = headingtitle[-12:]
         headingtitle = headingtitle[:-12].strip()  
-    query = {"headingtitle": headingtitle}
+    query = {"headingtitle": { "$regex": "^"+headingtitle+".*" }}
     map = Code("function () {"
                 "   emit(this.phrase,1);"
                 "}")
@@ -86,7 +86,7 @@ def get_phrase_heading_counts(phrase, speakername=None, how_many=25, from_date=N
     if speakername:
         query["speakername"] = speakername
     map = Code("function () {"
-                "   emit(this.headingtitle + ' ('+ this.date + ')',1);"
+                "   emit(this.headingtitle.substring(0,64) + ' ('+ this.date + ')',1);"
                 "}")
     reduce = Code("function (key, values) {"
                 "   return Array.sum(values)"
@@ -293,22 +293,6 @@ def api_phrase_usage(phrase):
             "Usage": int(r["value"])
         })
     return jsonify(**ret)
-
-@app.route('/test')
-def testing():
-    import traceback
-    try:
-        query = {"phrase": "energy use"}
-        map = Code("function () {"
-                    "   emit(this.headingtitle + ' ('+ this.date + ')',1);"
-                    "}")
-        reduce = Code("function (key, values) {"
-                    "   return Array.sum(values)"
-                    "}")
-        #results = db.phrases.map_reduce(map, reduce, "results", query=query)
-        return "success"
-    except:
-        return traceback.print_exc()
 
 
 if __name__=="__main__":
