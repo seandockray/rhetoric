@@ -97,7 +97,7 @@ def get_phrase_heading_counts(phrase, speakername=None, how_many=25, from_date=N
         for doc in results.find().sort("value", -1).limit(how_many):
             yield doc
     except:
-        return traceback.print_exc()
+        return [traceback.print_exc(),]
     return []
 
 
