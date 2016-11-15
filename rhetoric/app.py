@@ -118,7 +118,8 @@ def get_phrase_usage(phrase, speakername=None):
 
 def get_phrases_containing(fragment, how_many=25, from_date=None, to_date=None, speakername=None):
     ''' A list of phrases containing some text '''  
-    query = {"phrase":re.compile(".*"+fragment+".*", re.IGNORECASE)}
+    #query = {"phrase":re.compile(".*"+fragment+".*", re.IGNORECASE)}
+    query = {"phrase":re.compile("(^|\s)("+fragment+")($|\s)", re.IGNORECASE)}
     if from_date and to_date:
         query["date"] = {"$gte": from_date, "$lte": to_date}
     if speakername:
