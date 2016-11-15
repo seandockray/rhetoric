@@ -135,6 +135,16 @@ def get_phrases_containing(fragment, how_many=25, from_date=None, to_date=None, 
         yield doc
 
 
+@app.route('/', methods=['GET','POST'])
+@app.route('/index.html', methods=['GET','POST'])
+def index():
+    if request.form and 'query' in request.form:
+        query = re.sub(r'[^a-zA-Z0-9\s]','', request.form['query'])
+        return redirect(url_for('phrase_variations', fragment=query.lower()))
+    else:
+        t = Template(filename='templates/rhetoric/index.html')
+        return t.render()
+
 @app.route("/speaker/<speakername>")
 def speaker_phrases(speakername):
     title = "what %s spoke about" % speakername
@@ -350,16 +360,6 @@ def api_phrase_variations(fragment):
         })
     return jsonify(**ret)
 
-
-@app.route("/", methods=['GET','POST'])
-@app.route("/index.html", methods=['GET','POST'])
-def default():
-    if request.form and 'query' in request.form:
-        query = re.sub(r'[^a-zA-Z0-9\s]','', request.form['query'])
-        return redirect(url_for('phrase_variations', fragment=query.lower()))
-    else:
-        t = Template(filename='templates/rhetoric/index.html')
-        return t.render()
 
 if __name__=="__main__":
     app.debug = True
