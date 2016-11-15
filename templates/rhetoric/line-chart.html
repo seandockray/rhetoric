@@ -8,6 +8,7 @@
 </head>
 <body>
 <h1>${title}</h1>
+<div id="loading">loading...</div>
 <div id="chart">
   <script type="text/javascript" src="http://d3js.org/d3.v2.js"></script>
   <script src="http://dimplejs.org/dist/dimple.v2.2.0.min.js"></script>
@@ -16,7 +17,7 @@
     var svg = dimple.newSvg("#chart", 800, 400);
 
     d3.json("${data_url}", function(json) {
-  
+      d3.select("#loading").attr('style','display:none');
       var filter_url = json.filter_url;
       var data = json.items;
 

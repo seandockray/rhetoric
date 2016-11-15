@@ -13,6 +13,7 @@
 </head>
 <body>
 	<h1>${title}</h1>
+	<div id="loading">loading...</div>
 	<div id="chart"></div>
 </body>
 
@@ -27,7 +28,8 @@
 			.attr("height", h);
 	
 		d3.json("${data_url}", function(json) {
-	
+			d3.select("#loading").attr('style','display:none');
+
 			var data = json.items;
 	
 			var max_n = 0;
