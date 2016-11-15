@@ -352,6 +352,7 @@ def api_phrase_variations(fragment):
 
 
 @app.route("/", methods=['GET','POST'])
+@app.route("/index.html", methods=['GET','POST'])
 def default():
     if request.form and 'query' in request.form:
         query = re.sub(r'[^a-zA-Z0-9\s]','', request.form['query'])
