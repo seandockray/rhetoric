@@ -7,7 +7,7 @@ import getopt
 import re
 from bson.code import Code
 
-from flask import Flask, request, jsonify, url_for
+from flask import Flask, request, redirect, jsonify, url_for
 
 from mako.template import Template
 from pymongo import MongoClient
@@ -118,20 +118,20 @@ def get_phrase_usage(phrase, speakername=None):
 
 def get_phrases_containing(fragment, how_many=25, from_date=None, to_date=None, speakername=None):
     ''' A list of phrases containing some text '''  
-    match = {"$match": {"phrase":re.compile(".*"+fragment+".*", re.IGNORECASE)}}
-    if speakername:
-        match["$match"]["speakername"] = speakername
+    query = {"phrase":re.compile(".*"+fragment+".*", re.IGNORECASE)}
     if from_date and to_date:
-        match["$match"]["date"] = {"$gte": from_date, "$lte": to_date}
-    results = db.phrases.aggregate([
-        match, 
-        {"$group" : {"_id":"$phrase", "count" : {"$sum" : 1}}}, 
-        {"$sort": {"count": -1}},
-        {"$limit" : how_many}
-    ])
-    for r in results:
-        pass
-        print r
+        query["date"] = {"$gte": from_date, "$lte": to_date}
+    if speakername:
+        query["speakername"] = speakername
+    map = Code("function () {"
+                "   emit(this.phrase,1);"
+                "}")
+    reduce = Code("function (key, values) {"
+                "   return Array.sum(values)"
+                "}")
+    results = db.phrases.map_reduce(map, reduce, "results", query=query)
+    for doc in results.find().sort("value", -1).limit(how_many):
+        yield doc
 
 
 @app.route("/speaker/<speakername>")
@@ -325,6 +325,39 @@ def api_phrase_usage(phrase):
             })
     return jsonify(**ret)
 
+
+@app.route("/phrase/<fragment>/variations")
+def phrase_variations(fragment):
+    title = "phrases containing '%s'" % fragment
+    t = Template(filename='templates/rhetoric/bar-chart.html')
+    return t.render(
+        data_url=url_for('api_phrase_variations', fragment=fragment),
+        title = title,
+        linked_title = title
+    )
+
+@app.route("/api/v1.0/phrase/<fragment>/variations")
+def api_phrase_variations(fragment):
+    ret = {"items":[]}
+    results = list(get_phrases_containing(fragment, how_many=50))
+    results = sorted(results, key=lambda k: k['_id']) 
+    for r in results:
+        ret["items"].append({
+            "label": str(r["_id"]), 
+            "num": int(r["value"]),
+            "url": url_for('phrase_speakers', phrase=str(r["_id"]))
+        })
+    return jsonify(**ret)
+
+
+@app.route("/", methods=['GET','POST'])
+def default():
+    if request.form and 'query' in request.form:
+        query = re.sub(r'[^a-zA-Z0-9\s]','', request.form['query'])
+        return redirect(url_for('phrase_variations', fragment=query.lower()))
+    else:
+        t = Template(filename='templates/rhetoric/index.html')
+        return t.render()
 
 if __name__=="__main__":
     app.debug = True
