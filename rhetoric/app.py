@@ -137,6 +137,7 @@ def get_phrases_containing(fragment, how_many=25, from_date=None, to_date=None, 
 
 @app.route('/', methods=['GET','POST'])
 @app.route('/index.html', methods=['GET','POST'])
+@app.route('/home', methods=['GET','POST'])
 def index():
     if request.form and 'query' in request.form:
         query = re.sub(r'[^a-zA-Z0-9\s]','', request.form['query'])
