@@ -25,3 +25,4 @@ var/
 
 # App-specific
 app.conf
+_api_cache

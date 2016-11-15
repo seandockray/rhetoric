@@ -13,7 +13,10 @@ An interface for browsing Hansard transcripts through noun-phrase usage. You nee
 and edit the document:
 ```
 PORT = 5000
+MONGO_HOST = "localhost"
 MONGO_PORT = 27017
+CACHE_TYPE = "filesystem"
+CACHE_DIR = "_api_cache"
 ```
 and now you should be able to run it with:
 ```

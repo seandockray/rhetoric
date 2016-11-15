@@ -8,12 +8,14 @@ import re
 from bson.code import Code
 
 from flask import Flask, request, redirect, jsonify, url_for
+from flask.ext.cache import Cache  
 
 from mako.template import Template
 from pymongo import MongoClient
 
 app = Flask(__name__)
 app.config.from_pyfile('../app.conf', silent=True)
+app.cache = Cache(app)
 client = MongoClient(app.config['MONGO_HOST'], app.config['MONGO_PORT'], connect=False)
 db = client.hansard
 
@@ -164,6 +166,7 @@ def speaker_phrases(speakername):
     )
 
 @app.route("/api/v1.0/speaker/<speakername>")
+@app.cache.cached(timeout=86400) 
 def api_speaker_phrases(speakername):
     ret = {"items":[]}
     results = get_speaker_phrase_counts(speakername, how_many=50)
@@ -195,6 +198,7 @@ def phrase_speakers(phrase):
     )
 
 @app.route("/api/v1.0/phrase/<phrase>/speakers")
+@app.cache.cached(timeout=86400)
 def api_phrase_speakers(phrase):
     from_date = request.args.get('from_date')
     to_date = request.args.get('to_date')
@@ -226,6 +230,7 @@ def phrase_speaker_headings(phrase, speakername):
     )
 
 @app.route("/api/v1.0/phrase/<phrase>/speaker/<speakername>")
+@app.cache.cached(timeout=86400)
 def api_phrase_speaker_headings(phrase, speakername):
     results = get_phrase_speaker_heading_counts(phrase, speakername)
     ret = {"items":[]}
@@ -257,6 +262,7 @@ def phrase_headings(phrase):
     )
 
 @app.route("/api/v1.0/phrase/<phrase>/headings")
+@app.cache.cached(timeout=86400)
 def api_phrase_headings(phrase):
     from_date = request.args.get('from_date')
     to_date = request.args.get('to_date')
@@ -285,6 +291,7 @@ def heading_phrases(headingtitle):
     )
 
 @app.route("/api/v1.0/heading/<headingtitle>/phrases")
+@app.cache.cached(timeout=86400)
 def api_heading_phrases(headingtitle):
     results = get_heading_phrase_counts(headingtitle, how_many=50)
     ret = {"items":[]}
@@ -315,6 +322,7 @@ def phrase_usage(phrase):
         )
 
 @app.route("/api/v1.0/phrase/<phrase>/usage")
+@app.cache.cached(timeout=86400)
 def api_phrase_usage(phrase):
     if ',' in phrase:
         phrases = phrase.split(',')
@@ -349,6 +357,7 @@ def phrase_variations(fragment):
     )
 
 @app.route("/api/v1.0/phrase/<fragment>/variations")
+@app.cache.cached(timeout=86400)
 def api_phrase_variations(fragment):
     ret = {"items":[]}
     results = list(get_phrases_containing(fragment, how_many=50))
