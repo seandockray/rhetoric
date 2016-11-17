@@ -316,7 +316,7 @@ def api_phrase_headings(phrase):
 @app.route("/phrase/<phrase>")
 def phrase_usage_compiled(phrase):
     title = "mapping the use of '%s'" % phrase
-    linked_title = "mapping the use of '<a href='%s'>%s</a>'" % (url_for('phrase_usage', phrase=phrase), phrase)
+    linked_title = "mapping the use of '<a href='%s'>%s</a>'" % (url_for('phrase_usage_detailed', phrase=phrase), phrase)
     from_date = request.args.get('from_date')
     to_date = request.args.get('to_date')
     if from_date and to_date:
