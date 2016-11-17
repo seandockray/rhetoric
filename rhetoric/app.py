@@ -356,7 +356,7 @@ def build_treemap_data(data, level1, level2, urlkey):
 
 
 @app.route("/api/v1.0/phrase/<phrase>")
-#@app.cache.cached(timeout=86400)
+@app.cache.cached(timeout=86400)
 def api_phrase_usage_compiled(phrase):
     from_date = request.args.get('from_date')
     to_date = request.args.get('to_date')
