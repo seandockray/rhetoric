@@ -43,7 +43,7 @@ d3.json("${data_url}", function(json) {
 		.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
 
 	node.append("svg:title")
-		.text(function(d) { console.log(d); return d.label + ": " + format(d.value); });
+		.text(function(d) { return d.label + ": " + format(d.value); });
 
 	node.append("svg:circle")
 		.attr("r", function(d) { return d.r; })

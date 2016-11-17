@@ -103,6 +103,23 @@ def get_phrase_heading_counts(phrase, speakername=None, how_many=25, from_date=N
     for doc in results.find().sort("value", -1).limit(how_many):
         yield doc
 
+def get_phrase_usage_compiled(phrase, speakername=None, from_date=None, to_date=None):
+    ''' A list of headings by number of occurrences for a phrase '''  
+    query = {"phrase": phrase}
+    if from_date and to_date:
+        query["date"] = {"$gte": from_date, "$lte": to_date}
+    if speakername:
+        query["speakername"] = speakername
+    map = Code("function () {"
+                "   emit({speakername: this.speakername, headingtitle: this.headingtitle.substring(0,64) + ' ('+ this.date + ')', speechid: this.speechid},1);"
+                "}")
+    reduce = Code("function (key, values) {"
+                "   return Array.sum(values)"
+                "}")
+    results = db.phrases.map_reduce(map, reduce, "results", query=query)
+    for doc in results.find():
+        yield doc
+
 
 def get_phrase_usage(phrase, speakername=None):
     ''' A list of phrases by number of occurrences '''
@@ -119,6 +136,20 @@ def get_phrase_usage(phrase, speakername=None):
     for doc in results.find().sort("_id", 1):
         yield doc
 
+def get_detailed_phrase_usage(phrase, speakername=None):
+    ''' A list of phrases by number of occurrences ordered by date '''
+    query = {"phrase": phrase}
+    if speakername:
+        query["speakername"] = speakername
+    map = Code("function () {"
+                "   emit( this.date,1 );"
+                "}")
+    reduce = Code("function (key, values) {"
+                "   return Array.sum(values)"
+                "}")
+    results = db.phrases.map_reduce(map, reduce, "results", query=query)
+    for doc in results.find().sort("_id", 1):
+        yield doc
 
 def get_phrases_containing(fragment, how_many=25, from_date=None, to_date=None, speakername=None):
     ''' A list of phrases containing some text '''  
@@ -180,7 +211,6 @@ def api_speaker_phrases(speakername):
             })
     return jsonify(**ret)
 
-@app.route("/phrase/<phrase>")
 @app.route("/phrase/<phrase>/speakers")
 def phrase_speakers(phrase):
     title = "People who said '%s'" % phrase
@@ -232,7 +262,7 @@ def phrase_speaker_headings(phrase, speakername):
     )
 
 @app.route("/api/v1.0/phrase/<phrase>/speaker/<speakername>")
-#@app.cache.cached(timeout=86400)
+@app.cache.cached(timeout=86400)
 def api_phrase_speaker_headings(phrase, speakername):
     results = get_phrase_speaker_heading_counts(phrase, speakername)
     ret = {"items":[]}
@@ -280,6 +310,61 @@ def api_phrase_headings(phrase):
             "num": int(r["value"]),
             "url": url_for('heading_phrases', headingtitle=str(r["_id"]))
             })
+    return jsonify(**ret)
+
+
+@app.route("/phrase/<phrase>")
+def phrase_usage_compiled(phrase):
+    title = "mapping the use of '%s'" % phrase
+    linked_title = "mapping the use of '<a href='%s'>%s</a>'" % (url_for('phrase_usage', phrase=phrase), phrase)
+    from_date = request.args.get('from_date')
+    to_date = request.args.get('to_date')
+    if from_date and to_date:
+        data_url = url_for('api_phrase_usage_compiled', phrase=phrase, from_date=from_date, to_date=to_date)
+        title += " between %s and %s" % (from_date, to_date)
+        linked_title += " between %s and %s" % (from_date, to_date)
+    else:
+        data_url = url_for('api_phrase_usage_compiled', phrase=phrase)
+    t = Template(filename='templates/rhetoric/treemap.html', input_encoding='utf-8', output_encoding='utf-8')
+    return t.render(
+        title = title,
+        linked_title = linked_title,
+        data_url=data_url
+    )
+
+def build_treemap_data(data, level1, level2, urlkey):
+    ''' Builds a treemap 2 levels deep '''
+    data = list(data)
+    treemap = {"name": "usage", "children":[]}
+    level1_keys = list(set([d['_id'][level1] for d in data]))
+    tmp_data = {}
+    for k in level1_keys:
+        tmp_data[k] = []
+    for d in data:
+        k = d['_id'][level1]
+        tmp_data[k].append({
+            "name": d['_id'][level2],
+            "value": d['value'],
+            "url": d['_id'][urlkey]
+            })
+    for d in tmp_data:
+        treemap["children"].append({
+            "name": d, 
+            "children": tmp_data[d]
+            })
+    return treemap
+
+
+@app.route("/api/v1.0/phrase/<phrase>")
+#@app.cache.cached(timeout=86400)
+def api_phrase_usage_compiled(phrase):
+    from_date = request.args.get('from_date')
+    to_date = request.args.get('to_date')
+    if from_date and to_date:
+        results = get_phrase_usage_compiled(phrase, from_date=from_date, to_date=to_date)
+    else:
+        results = get_phrase_usage_compiled(phrase)
+    ret = build_treemap_data(results, 'speakername', 'headingtitle', 'speechid')
     return jsonify(**ret)
 
 
@@ -346,6 +431,29 @@ def api_phrase_usage(phrase):
                 "Month": str(r["_id"]), 
                 "Usage": int(r["value"])
             })
+    return jsonify(**ret)
+
+
+@app.route("/phrase/<phrase>/usage/detailed")
+def phrase_usage_detailed(phrase):
+    title = "when and how often '%s' was said" % phrase
+    t = Template(filename='templates/rhetoric/calendar.html')
+    return t.render(
+        data_url=url_for('api_phrase_usage_detailed', phrase=phrase),
+        title = title
+    )
+
+@app.route("/api/v1.0/phrase/<phrase>/usage/detailed")
+@app.cache.cached(timeout=86400)
+def api_phrase_usage_detailed(phrase):
+    ret = {"filter_url": url_for('phrase_headings', phrase=phrase, from_date="FROM_DATE", to_date="TO_DATE"), "items":[]}
+    results = get_detailed_phrase_usage(phrase)
+    for r in results:
+        ret["items"].append({
+            "Date": str(r["_id"]), 
+            "Usage": int(r["value"]),
+            "url": url_for('phrase_headings', phrase=phrase, from_date=str(r["_id"]), to_date=str(r["_id"]))
+        })
     return jsonify(**ret)
 
 
