@@ -55,13 +55,15 @@ def get_phrase_speaker_heading_counts(phrase, speakername):
     ''' A list of speakers by number of occurrences for a phrase '''  
     query = {"phrase": phrase, "speakername": speakername}
     map = Code("function () {"
-                "   emit(this.headingtitle.substring(0,64) + ' ('+ this.date + ')',1);"
+                "   var key = {title:this.headingtitle.substring(0,64) + ' ('+ this.date + ')', speechid:this.speechid, house:this.house};"
+                "   emit(key ,1);"
                 "}")
     reduce = Code("function (key, values) {"
                 "   return Array.sum(values)"
                 "}")
     results = db.phrases.map_reduce(map, reduce, "results", query=query)
     for doc in results.find().sort("value", -1):
+        "_id: {speechid:..., house:..., title:...}, value:..."
         yield doc
 
 def get_heading_phrase_counts(headingtitle, how_many=25):
@@ -230,15 +232,16 @@ def phrase_speaker_headings(phrase, speakername):
     )
 
 @app.route("/api/v1.0/phrase/<phrase>/speaker/<speakername>")
-@app.cache.cached(timeout=86400)
+#@app.cache.cached(timeout=86400)
 def api_phrase_speaker_headings(phrase, speakername):
     results = get_phrase_speaker_heading_counts(phrase, speakername)
     ret = {"items":[]}
     for r in results:
         ret["items"].append({
-            "label": str(r["_id"]), 
+            "label": str(r["_id"]["title"]), 
             "num": int(r["value"]),
-            "url": url_for('heading_phrases', headingtitle=str(r["_id"]))
+            #"url": url_for('heading_phrases', headingtitle=str(r["_id"]["title"]))
+            "url": 'http://rhetoric.metadada.xyz/speeches/'+r["_id"]["house"]+"/"+r["_id"]["speechid"]+".html"
             })
     return jsonify(**ret)
 
