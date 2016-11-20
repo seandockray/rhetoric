@@ -329,7 +329,8 @@ def phrase_usage_compiled(phrase):
     return t.render(
         title = title,
         linked_title = linked_title,
-        data_url=data_url
+        data_url=data_url,
+        phrase=phrase
     )
 
 def build_treemap_data(data, level1, level2, urlkey):

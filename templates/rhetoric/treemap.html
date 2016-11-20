@@ -69,6 +69,7 @@ rect.parent,
 <script>
 
 var speech_url_base = 'http://rhetoric.metadada.xyz/speeches/';
+var search_phrase = "${phrase}";
 
 var margin = {top: 20, right: 0, bottom: 0, left: 0},
     width = 960,
@@ -179,7 +180,7 @@ d3.json("${data_url}", function(root) {
     // something here that filters the second time around
     g.filter(function(d) { if ("url" in d) return d; else return null; })
       .classed("children", true)
-      .on("click", function(d) { window.open(speech_url_base + d.url, '_blank'); });
+      .on("click", function(d) { window.open(speech_url_base + d.url + '?search=' + search_phrase, '_blank'); });
 
     g.selectAll(".child")
         .data(function(d) { return d._children || [d]; })
