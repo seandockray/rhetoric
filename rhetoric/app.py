@@ -479,7 +479,7 @@ def api_phrase_variations(fragment):
         ret["items"].append({
             "label": str(r["_id"]), 
             "num": int(r["value"]),
-            "url": url_for('phrase_speakers', phrase=str(r["_id"]))
+            "url": url_for('phrase_usage_compiled', phrase=str(r["_id"]))
         })
     return jsonify(**ret)
 
