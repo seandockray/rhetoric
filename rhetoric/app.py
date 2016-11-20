@@ -111,7 +111,7 @@ def get_phrase_usage_compiled(phrase, speakername=None, from_date=None, to_date=
     if speakername:
         query["speakername"] = speakername
     map = Code("function () {"
-                "   emit({speakername: this.speakername, headingtitle: this.headingtitle.substring(0,64) + ' ('+ this.date + ')', speechid: this.speechid},1);"
+                "   emit({speakername: this.speakername, headingtitle: this.headingtitle.substring(0,64) + ' ('+ this.date + ')', url: this.house + '/' + this.speechid + '.html'},1);"
                 "}")
     reduce = Code("function (key, values) {"
                 "   return Array.sum(values)"
@@ -361,10 +361,12 @@ def api_phrase_usage_compiled(phrase):
     from_date = request.args.get('from_date')
     to_date = request.args.get('to_date')
     if from_date and to_date:
+        # Flips the levels so we see heading on top when narrowed by date
         results = get_phrase_usage_compiled(phrase, from_date=from_date, to_date=to_date)
+        ret = build_treemap_data(results, 'headingtitle', 'speakername', 'url')
     else:
         results = get_phrase_usage_compiled(phrase)
-    ret = build_treemap_data(results, 'speakername', 'headingtitle', 'speechid')
+        ret = build_treemap_data(results, 'speakername', 'headingtitle', 'url')
     return jsonify(**ret)
 
 
@@ -452,7 +454,7 @@ def api_phrase_usage_detailed(phrase):
         ret["items"].append({
             "Date": str(r["_id"]), 
             "Usage": int(r["value"]),
-            "url": url_for('phrase_headings', phrase=phrase, from_date=str(r["_id"]), to_date=str(r["_id"]))
+            "url": url_for('phrase_usage_compiled', phrase=phrase, from_date=str(r["_id"]), to_date=str(r["_id"]))
         })
     return jsonify(**ret)
 

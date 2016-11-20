@@ -68,6 +68,8 @@ rect.parent,
 <script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>
 <script>
 
+var speech_url_base = 'http://rhetoric.metadada.xyz/speeches/';
+
 var margin = {top: 20, right: 0, bottom: 0, left: 0},
     width = 960,
     height = 500 - margin.top - margin.bottom,
@@ -155,6 +157,7 @@ d3.json("${data_url}", function(root) {
   }
 
   function display(d) {
+
     grandparent
         .datum(d.parent)
         .on("click", transition)
@@ -172,6 +175,11 @@ d3.json("${data_url}", function(root) {
     g.filter(function(d) { return d._children; })
         .classed("children", true)
         .on("click", transition);
+
+    // something here that filters the second time around
+    g.filter(function(d) { if ("url" in d) return d; else return null; })
+      .classed("children", true)
+      .on("click", function(d) { window.open(speech_url_base + d.url, '_blank'); });
 
     g.selectAll(".child")
         .data(function(d) { return d._children || [d]; })
@@ -192,11 +200,10 @@ d3.json("${data_url}", function(root) {
         .attr("class", "speech")
         .call(text);
 
-    g.filter(".child text")
-        .on("click", function(d) {console.log(d); });
 
 
     function transition(d) {
+
       if (transitioning || !d) return;
       transitioning = true;
 
