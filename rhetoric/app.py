@@ -19,6 +19,11 @@ app.cache = Cache(app)
 client = MongoClient(app.config['MONGO_HOST'], app.config['MONGO_PORT'], connect=False)
 db = client.hansard
 
+def make_key ():
+  """Make a key that includes GET parameters."""
+  """ https://github.com/thadeusb/flask-cache/issues/104 """
+  return request.full_path
+
 def get_speaker_phrase_counts(speakername, how_many=25, from_date=None, to_date=None):
     ''' A list of phrases by number of occurrences ''' 
     query = {"speakername": speakername}
@@ -199,7 +204,7 @@ def speaker_phrases(speakername):
     )
 
 @app.route("/api/v1.0/speaker/<speakername>")
-@app.cache.cached(timeout=86400) 
+@app.cache.cached(key_prefix=make_key, timeout=86400) 
 def api_speaker_phrases(speakername):
     ret = {"items":[]}
     results = get_speaker_phrase_counts(speakername, how_many=50)
@@ -230,7 +235,7 @@ def phrase_speakers(phrase):
     )
 
 @app.route("/api/v1.0/phrase/<phrase>/speakers")
-@app.cache.cached(timeout=86400)
+@app.cache.cached(key_prefix=make_key, timeout=86400)
 def api_phrase_speakers(phrase):
     from_date = request.args.get('from_date')
     to_date = request.args.get('to_date')
@@ -262,7 +267,7 @@ def phrase_speaker_headings(phrase, speakername):
     )
 
 @app.route("/api/v1.0/phrase/<phrase>/speaker/<speakername>")
-@app.cache.cached(timeout=86400)
+@app.cache.cached(key_prefix=make_key, timeout=86400)
 def api_phrase_speaker_headings(phrase, speakername):
     results = get_phrase_speaker_heading_counts(phrase, speakername)
     ret = {"items":[]}
@@ -295,7 +300,7 @@ def phrase_headings(phrase):
     )
 
 @app.route("/api/v1.0/phrase/<phrase>/headings")
-@app.cache.cached(timeout=86400)
+@app.cache.cached(key_prefix=make_key, timeout=86400)
 def api_phrase_headings(phrase):
     from_date = request.args.get('from_date')
     to_date = request.args.get('to_date')
@@ -357,7 +362,7 @@ def build_treemap_data(data, level1, level2, urlkey):
 
 
 @app.route("/api/v1.0/phrase/<phrase>")
-@app.cache.cached(timeout=86400)
+@app.cache.cached(key_prefix=make_key, timeout=86400)
 def api_phrase_usage_compiled(phrase):
     from_date = request.args.get('from_date')
     to_date = request.args.get('to_date')
@@ -382,7 +387,7 @@ def heading_phrases(headingtitle):
     )
 
 @app.route("/api/v1.0/heading/<headingtitle>/phrases")
-@app.cache.cached(timeout=86400)
+@app.cache.cached(key_prefix=make_key, timeout=86400)
 def api_heading_phrases(headingtitle):
     results = get_heading_phrase_counts(headingtitle, how_many=50)
     ret = {"items":[]}
@@ -413,7 +418,7 @@ def phrase_usage(phrase):
         )
 
 @app.route("/api/v1.0/phrase/<phrase>/usage")
-@app.cache.cached(timeout=86400)
+@app.cache.cached(key_prefix=make_key, timeout=86400)
 def api_phrase_usage(phrase):
     if ',' in phrase:
         phrases = phrase.split(',')
@@ -447,7 +452,7 @@ def phrase_usage_detailed(phrase):
     )
 
 @app.route("/api/v1.0/phrase/<phrase>/usage/detailed")
-@app.cache.cached(timeout=86400)
+@app.cache.cached(key_prefix=make_key, timeout=86400)
 def api_phrase_usage_detailed(phrase):
     ret = {"filter_url": url_for('phrase_headings', phrase=phrase, from_date="FROM_DATE", to_date="TO_DATE"), "items":[]}
     results = get_detailed_phrase_usage(phrase)
@@ -471,7 +476,7 @@ def phrase_variations(fragment):
     )
 
 @app.route("/api/v1.0/phrase/<fragment>/variations")
-@app.cache.cached(timeout=86400)
+@app.cache.cached(key_prefix=make_key, timeout=86400)
 def api_phrase_variations(fragment):
     ret = {"items":[]}
     results = list(get_phrases_containing(fragment, how_many=50))
